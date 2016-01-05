@@ -28,6 +28,7 @@ function usage {
 
   options:
     -H HOST     URL of Prometheus host to query, in single quotes
+    -E EXT_URL  Prefix of query endpoint, in single quotes
     -q QUERY    Prometheus query, in single quotes, that returns a float or int
     -w INT      Warning level value (must be zero or positive)
     -c INT      Critical level value (must be zero or positive)
@@ -42,10 +43,11 @@ EoL
 
 function process_command_line {
 
-  while getopts ':H:q:w:c:m:n:O' OPT "$@"
+  while getopts ':H:E:q:w:c:m:n:O' OPT "$@"
   do
     case $OPT in
       H)        PROMETHEUS_SERVER="$OPTARG" ;;
+      E)        PROMETHEUS_EXTERNAL_URL="${OPTARG:-}" ;;
       q)        PROMETHEUS_QUERY="$OPTARG" ;;
       n)        METRIC_NAME="$OPTARG" ;;
 
@@ -136,9 +138,10 @@ function get_prometheus_result {
   local _PROMETHEUS_CMD
   local _RESULT
   # set up and run the prometheus_cli command
-  printf -v _PROMETHEUS_CMD '%s -server=%s -timeout=%s query' \
+  printf -v _PROMETHEUS_CMD '%s -server=%s -external-url=%s -timeout=%s query' \
                             "$PROMETHEUS_CLI" \
                             "$PROMETHEUS_SERVER" \
+                            "$PROMETHEUS_EXTERNAL_URL" \
                             "$PROMETHEUS_TIMEOUT"
 
   _RESULT=$( $_PROMETHEUS_CMD "$PROMETHEUS_QUERY" 2>&1 )
